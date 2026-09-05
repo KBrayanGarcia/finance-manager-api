@@ -1,0 +1,962 @@
+{
+  "info": {
+    "_postman_id": "bf0eeb07-72d6-4cc6-a6c4-53d7f1ae13ed",
+    "name": "Finance Manager API",
+    "description": "Colección completa de endpoints para Finance Manager API (NestJS + TypeORM + MySQL). Incluye autenticación Bearer dinámica, variables de entorno, scripts de prueba para auto-guardar tokens e IDs, y soporte completo de CRUD para cuentas, categorías y transacciones atómicas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "description": "URL base por defecto si no está definida en el entorno"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Autenticación (Auth)",
+      "description": "Endpoints de registro e inicio de sesión con JWT. Los tests automáticos almacenan el accessToken y userId en el entorno.",
+      "item": [
+        {
+          "name": "Registrar Usuario (Register)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Registro exitoso (Status 201)\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "    pm.environment.set(\"token\", res.accessToken);",
+                  "    console.log(\"Token guardado automáticamente en el entorno\");",
+                  "}",
+                  "if (res.user && res.user.id) {",
+                  "    pm.environment.set(\"userId\", res.user.id);",
+                  "    console.log(\"userId guardado: \" + res.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@ejemplo.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"Brayan\",\n  \"lastName\": \"Garcia\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Crea una nueva cuenta de usuario y retorna el token JWT y el perfil de usuario."
+          }
+        },
+        {
+          "name": "Iniciar Sesión (Login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Login exitoso (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "    pm.environment.set(\"token\", res.accessToken);",
+                  "    console.log(\"Token guardado automáticamente en el entorno\");",
+                  "}",
+                  "if (res.user && res.user.id) {",
+                  "    pm.environment.set(\"userId\", res.user.id);",
+                  "    console.log(\"userId guardado: \" + res.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@ejemplo.com\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Inicia sesión con credenciales válidas y retorna un nuevo accessToken."
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Usuarios (Users)",
+      "description": "Gestión y consulta del perfil del usuario autenticado.",
+      "item": [
+        {
+          "name": "Obtener Perfil del Usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Perfil obtenido exitosamente (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "profile"]
+            },
+            "description": "Retorna la información y detalles del usuario actualmente autenticado mediante el token JWT."
+          }
+        },
+        {
+          "name": "Actualizar Perfil del Usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Perfil actualizado exitosamente (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Brayan\",\n  \"lastName\": \"Garcia Actualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "profile"]
+            },
+            "description": "Permite actualizar nombre, apellido y opcionalmente cambiar contraseña."
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Cuentas (Accounts)",
+      "description": "Gestión de cuentas financieras (bancarias, efectivo, tarjetas, ahorros, etc.).",
+      "item": [
+        {
+          "name": "Crear Cuenta Principal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Cuenta creada exitosamente (Status 201)\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "    pm.environment.set(\"accountId\", res.id);",
+                  "    console.log(\"accountId guardado: \" + res.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cuenta Corriente Principal\",\n  \"type\": \"CHECKING\",\n  \"currency\": \"USD\",\n  \"initialBalance\": 1000.00,\n  \"color\": \"#10B981\",\n  \"icon\": \"wallet\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "accounts"]
+            },
+            "description": "Crea una cuenta financiera inicial y almacena su ID en la variable de entorno accountId."
+          }
+        },
+        {
+          "name": "Crear Cuenta Secundaria (Ahorros / Destino)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Cuenta secundaria creada (Status 201)\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "    pm.environment.set(\"destinationAccountId\", res.id);",
+                  "    console.log(\"destinationAccountId guardado: \" + res.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Fondo de Ahorros\",\n  \"type\": \"SAVINGS\",\n  \"currency\": \"USD\",\n  \"initialBalance\": 500.00,\n  \"color\": \"#3B82F6\",\n  \"icon\": \"piggy-bank\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "accounts"]
+            },
+            "description": "Crea una segunda cuenta financiera para probar transferencias entre cuentas y guarda destinationAccountId."
+          }
+        },
+        {
+          "name": "Listar Cuentas del Usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Cuentas obtenidas exitosamente (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "accounts"]
+            },
+            "description": "Obtiene todas las cuentas activas asociadas al usuario autenticado."
+          }
+        },
+        {
+          "name": "Obtener Cuenta por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Detalle de cuenta obtenido (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/{{accountId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "accounts", "{{accountId}}"]
+            },
+            "description": "Obtiene el detalle y balance actualizado de una cuenta específica por su UUID."
+          }
+        },
+        {
+          "name": "Actualizar Cuenta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Cuenta actualizada exitosamente (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cuenta Nómina Principal\",\n  \"color\": \"#059669\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/{{accountId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "accounts", "{{accountId}}"]
+            },
+            "description": "Actualiza datos editables de la cuenta como nombre, color, ícono o estado activo."
+          }
+        },
+        {
+          "name": "Eliminar Cuenta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Cuenta eliminada/desactivada exitosamente (Status 204)\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/{{accountId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "accounts", "{{accountId}}"]
+            },
+            "description": "Desactiva de forma lógica la cuenta del usuario autenticado."
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Categorías (Categories)",
+      "description": "Gestión de categorías para clasificación de gastos (EXPENSE) e ingresos (INCOME).",
+      "item": [
+        {
+          "name": "Crear Categoría (Gasto / EXPENSE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Categoría de gasto creada (Status 201)\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "    pm.environment.set(\"categoryId\", res.id);",
+                  "    console.log(\"categoryId guardado: \" + res.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alimentación y Supermercado\",\n  \"type\": \"EXPENSE\",\n  \"icon\": \"shopping-cart\",\n  \"color\": \"#EF4444\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "categories"]
+            },
+            "description": "Crea una categoría de tipo gasto y guarda su ID en la variable categoryId."
+          }
+        },
+        {
+          "name": "Crear Categoría (Ingreso / INCOME)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Categoría de ingreso creada (Status 201)\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Salario y Honorarios\",\n  \"type\": \"INCOME\",\n  \"icon\": \"cash\",\n  \"color\": \"#10B981\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "categories"]
+            },
+            "description": "Crea una categoría de tipo ingreso."
+          }
+        },
+        {
+          "name": "Listar Todas las Categorías",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Categorías obtenidas (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "categories"]
+            },
+            "description": "Lista todas las categorías asociadas al usuario y categorías globales."
+          }
+        },
+        {
+          "name": "Filtrar Categorías por Tipo (EXPENSE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Categorías de gastos filtradas (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories?type=EXPENSE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "categories"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "EXPENSE",
+                  "description": "Tipo de categoría: EXPENSE o INCOME"
+                }
+              ]
+            },
+            "description": "Filtra categorías de tipo EXPENSE."
+          }
+        },
+        {
+          "name": "Filtrar Categorías por Tipo (INCOME)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Categorías de ingresos filtradas (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories?type=INCOME",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "categories"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "INCOME",
+                  "description": "Tipo de categoría: EXPENSE o INCOME"
+                }
+              ]
+            },
+            "description": "Filtra categorías de tipo INCOME."
+          }
+        },
+        {
+          "name": "Obtener Categoría por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Categoría obtenida por ID (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "categories", "{{categoryId}}"]
+            },
+            "description": "Obtiene los detalles de una categoría por su UUID."
+          }
+        },
+        {
+          "name": "Actualizar Categoría",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Categoría actualizada (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Supermercado y Despensa\",\n  \"color\": \"#DC2626\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "categories", "{{categoryId}}"]
+            },
+            "description": "Actualiza los atributos de una categoría existente."
+          }
+        },
+        {
+          "name": "Eliminar Categoría",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Categoría eliminada (Status 204)\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "categories", "{{categoryId}}"]
+            },
+            "description": "Desactiva de forma lógica la categoría."
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Transacciones (Transactions)",
+      "description": "Registro de ingresos, gastos y transferencias con actualización atómica de balance de cuentas.",
+      "item": [
+        {
+          "name": "Registrar Gasto (EXPENSE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Gasto registrado exitosamente (Status 201)\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "    pm.environment.set(\"transactionId\", res.id);",
+                  "    console.log(\"transactionId guardado: \" + res.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"type\": \"EXPENSE\",\n  \"amount\": 45.50,\n  \"categoryId\": \"{{categoryId}}\",\n  \"transactionDate\": \"2026-09-05T00:00:00.000Z\",\n  \"description\": \"Compra semanal en supermercado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions"]
+            },
+            "description": "Registra un egreso/gasto y descuenta automáticamente el balance de la cuenta de origen. Almacena transactionId en el entorno."
+          }
+        },
+        {
+          "name": "Registrar Ingreso (INCOME)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Ingreso registrado exitosamente (Status 201)\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "    pm.environment.set(\"transactionId\", res.id);",
+                  "    console.log(\"transactionId guardado: \" + res.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"type\": \"INCOME\",\n  \"amount\": 1200.00,\n  \"categoryId\": \"{{categoryId}}\",\n  \"transactionDate\": \"2026-09-05T00:00:00.000Z\",\n  \"description\": \"Depósito de nómina quincenal\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions"]
+            },
+            "description": "Registra un ingreso y suma de forma atómica el balance de la cuenta seleccionada."
+          }
+        },
+        {
+          "name": "Registrar Transferencia entre Cuentas (TRANSFER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Transferencia realizada exitosamente (Status 201)\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "    pm.environment.set(\"transactionId\", res.id);",
+                  "    console.log(\"transactionId guardado: \" + res.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"destinationAccountId\": \"{{destinationAccountId}}\",\n  \"type\": \"TRANSFER\",\n  \"amount\": 100.00,\n  \"transactionDate\": \"2026-09-05T00:00:00.000Z\",\n  \"description\": \"Transferencia programada a ahorros\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions"]
+            },
+            "description": "Transfiere dinero debitando de la cuenta origen y acreditando en la cuenta destino de forma transaccional."
+          }
+        },
+        {
+          "name": "Listar Transacciones (Con Filtros y Paginación)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Transacciones listadas exitosamente (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res).to.have.property(\"data\");",
+                  "    pm.expect(res).to.have.property(\"total\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions"],
+              "query": [
+                {
+                  "key": "accountId",
+                  "value": "{{accountId}}",
+                  "description": "Filtrar por cuenta origen",
+                  "disabled": true
+                },
+                {
+                  "key": "categoryId",
+                  "value": "{{categoryId}}",
+                  "description": "Filtrar por categoría",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "EXPENSE",
+                  "description": "Filtrar por tipo (INCOME, EXPENSE, TRANSFER)",
+                  "disabled": true
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-09-01",
+                  "description": "Fecha inicial (ISO o YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-09-30",
+                  "description": "Fecha final (ISO o YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Cantidad de registros a obtener (1-100)",
+                  "disabled": false
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Desplazamiento para paginación",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Lista transacciones del usuario autenticado con filtros opcionales por cuenta, categoría, tipo, rango de fechas y paginación."
+          }
+        },
+        {
+          "name": "Obtener Transacción por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Detalle de transacción obtenido (Status 200)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/{{transactionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions", "{{transactionId}}"]
+            },
+            "description": "Obtiene los detalles de una transacción por su UUID."
+          }
+        },
+        {
+          "name": "Eliminar Transacción (Reversión de Balances)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Transacción eliminada y balance revertido (Status 204)\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/{{transactionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions", "{{transactionId}}"]
+            },
+            "description": "Elimina una transacción y revierte automáticamente los saldos que fueron afectados en las cuentas."
+          }
+        }
+      ]
+    }
+  ]
+}
