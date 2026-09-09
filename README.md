@@ -2,6 +2,8 @@
 
 Backend modular desarrollado con **NestJS**, **TypeORM** y **MySQL** para el control y administración de finanzas personales.
 
+> 🖥️ **Frontend Web**: [KBrayanGarcia/finance-manager-web](https://github.com/KBrayanGarcia/finance-manager-web)
+
 ---
 
 ## 🚀 Características Principales
