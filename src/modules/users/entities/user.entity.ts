@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { Account } from '../../accounts/entities/account.entity';
+import { ApiKey } from '../../api-keys/entities/api-key.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { Transaction } from '../../transactions/entities/transaction.entity';
 
@@ -32,4 +33,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Transaction, (transaction) => transaction.user)
   readonly transactions: Transaction[];
+
+  @OneToMany(() => ApiKey, (apiKey) => apiKey.user)
+  readonly apiKeys: ApiKey[];
 }
