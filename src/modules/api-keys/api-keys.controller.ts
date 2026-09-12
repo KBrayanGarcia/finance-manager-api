@@ -14,9 +14,11 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../users/entities/user.entity';
 import { ApiKeysService } from './api-keys.service';
+import {
+  ApiKeyResponseDto,
+  CreateApiKeyResponseDto,
+} from './dto/api-key-response.dto';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
-import { ApiKey } from './entities/api-key.entity';
-import { ApiKeyCreatedResponse } from './interfaces/api-key-created-response.interface';
 
 /**
  * Controlador para la gestión de API Keys (Personal Access Tokens).
@@ -30,12 +32,12 @@ export class ApiKeysController {
   async createApiKey(
     @CurrentUser() user: User,
     @Body() dto: CreateApiKeyDto,
-  ): Promise<ApiKeyCreatedResponse> {
+  ): Promise<CreateApiKeyResponseDto> {
     return this.apiKeysService.createApiKey({ userId: user.id, dto });
   }
 
   @Get()
-  async findAll(@CurrentUser() user: User): Promise<ApiKey[]> {
+  async findAll(@CurrentUser() user: User): Promise<ApiKeyResponseDto[]> {
     return this.apiKeysService.findAllByUser(user.id);
   }
 

@@ -3,8 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
+import {
+  ApiKeyResponseDto,
+  CreateApiKeyResponseDto,
+} from './dto/api-key-response.dto';
 import { ApiKey } from './entities/api-key.entity';
-import { ApiKeyCreatedResponse } from './interfaces/api-key-created-response.interface';
 import { generateApiKeyToken, hashApiKey } from './utils/api-key-crypto.util';
 
 /**
@@ -20,7 +23,7 @@ export class ApiKeysService {
   async createApiKey(params: {
     readonly userId: string;
     readonly dto: CreateApiKeyDto;
-  }): Promise<ApiKeyCreatedResponse> {
+  }): Promise<CreateApiKeyResponseDto> {
     const { rawKey, keyHash, prefix } = generateApiKeyToken();
 
     const apiKey = this.apiKeyRepository.create({
@@ -33,14 +36,15 @@ export class ApiKeysService {
     });
 
     const savedApiKey = await this.apiKeyRepository.save(apiKey);
-    return { apiKey: savedApiKey, rawKey };
+    return CreateApiKeyResponseDto.fromEntityAndRawKey(savedApiKey, rawKey);
   }
 
-  async findAllByUser(userId: string): Promise<ApiKey[]> {
-    return this.apiKeyRepository.find({
+  async findAllByUser(userId: string): Promise<ApiKeyResponseDto[]> {
+    const keys = await this.apiKeyRepository.find({
       where: { userId },
       order: { createdAt: 'DESC' },
     });
+    return keys.map(ApiKeyResponseDto.fromEntity);
   }
 
   async deleteApiKey(params: {
