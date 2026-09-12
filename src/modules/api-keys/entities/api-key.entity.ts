@@ -18,7 +18,7 @@ export class ApiKey extends BaseEntity {
   @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, select: false })
   keyHash: string;
 
   @Column({ type: 'varchar', length: 16 })
