@@ -7,6 +7,7 @@ import {
     HttpStatus,
     Param,
     ParseUUIDPipe,
+    Patch,
     Post,
     Query,
     UseGuards,
@@ -16,6 +17,7 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { User } from "../users/entities/user.entity";
 import { CreateTransactionDto } from "./dto/create-transaction.dto";
 import { QueryTransactionDto } from "./dto/query-transaction.dto";
+import { UpdateTransactionDto } from "./dto/update-transaction.dto";
 import { Transaction } from "./entities/transaction.entity";
 import { TransactionsService } from "./transactions.service";
 
@@ -46,6 +48,19 @@ export class TransactionsController {
     @Get(":id")
     async findOne(@CurrentUser() user: User, @Param("id", ParseUUIDPipe) id: string): Promise<Transaction> {
         return this.transactionsService.findById({ id, userId: user.id });
+    }
+
+    @Patch(":id")
+    async update(
+        @CurrentUser() user: User,
+        @Param("id", ParseUUIDPipe) id: string,
+        @Body() dto: UpdateTransactionDto,
+    ): Promise<Transaction> {
+        return this.transactionsService.updateTransaction({
+            id,
+            userId: user.id,
+            dto,
+        });
     }
 
     @HttpCode(HttpStatus.NO_CONTENT)
