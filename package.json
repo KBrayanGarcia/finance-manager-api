@@ -11,7 +11,12 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main"
+    "start:prod": "node dist/main",
+    "release": "commit-and-tag-version",
+    "release:dry": "commit-and-tag-version --dry-run",
+    "release:patch": "commit-and-tag-version --release-as patch",
+    "release:minor": "commit-and-tag-version --release-as minor",
+    "release:major": "commit-and-tag-version --release-as major"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",
@@ -39,6 +44,7 @@
     "@types/node": "^20.14.0",
     "@types/passport-jwt": "^4.0.1",
     "@types/pg": "^8.23.1",
+    "commit-and-tag-version": "^13.2.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.4.5"
