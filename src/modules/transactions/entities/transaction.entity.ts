@@ -30,21 +30,21 @@ export class Transaction extends BaseEntity {
 
   @Index()
   @Column({ type: 'uuid', nullable: true })
-  readonly categoryId?: string;
+  readonly categoryId?: string | null;
 
   @ManyToOne(() => Category, (category) => category.transactions, {
     onDelete: 'SET NULL',
     nullable: true,
   })
   @JoinColumn({ name: 'categoryId' })
-  readonly category?: Category;
+  readonly category?: Category | null;
 
   @Column({ type: 'uuid', nullable: true })
-  readonly destinationAccountId?: string;
+  readonly destinationAccountId?: string | null;
 
   @ManyToOne(() => Account, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'destinationAccountId' })
-  readonly destinationAccount?: Account;
+  readonly destinationAccount?: Account | null;
 
   @Column({
     type: 'enum',
@@ -67,5 +67,5 @@ export class Transaction extends BaseEntity {
   readonly transactionDate: Date;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  readonly description?: string;
+  readonly description?: string | null;
 }
