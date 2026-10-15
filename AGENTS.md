@@ -76,3 +76,14 @@ npm run start:prod
   - No ejecutar `npm run release` manualmente antes de fusionar a `main` (para previsualizar cambios usar `npm run release:dry`).
   - Al fusionar un Pull Request de `develop` → `main`, el workflow `.github/workflows/release.yml` incrementa la versión en `package.json`, actualiza `CHANGELOG.md`, crea el tag `vX.Y.Z`, publica el GitHub Release y sincroniza el commit de regreso a `develop`.
   - Tras cada pase a producción, ejecutar `git pull --tags origin develop` y `git fetch origin main:main` para sincronizar el entorno local.
+- **Despliegues en Preview / Staging (Vercel por lotes):**
+  - Para ahorrar minutos y recursos gratuitos de build, los pushes ordinarios a `develop` son ignorados por Vercel (`ignoreCommand`).
+  - Para desplegar un lote de cambios en el entorno de Preview, incluir la palabra clave `predeploy` (o `[predeploy]`) en el mensaje del commit:
+    ```bash
+    git commit -m "feat(modulo): cerrar lote de cambios [predeploy]"
+    ```
+  - Para disparar el despliegue de Preview sin cambios de código nuevos:
+    ```bash
+    git commit --allow-empty -m "ci: disparar preview [predeploy]" && git push origin develop
+    ```
+
