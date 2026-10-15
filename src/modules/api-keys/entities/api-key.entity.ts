@@ -24,12 +24,12 @@ export class ApiKey extends BaseEntity {
   @Column({ type: 'varchar', length: 16 })
   prefix: string;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   lastUsedAt?: Date;
 
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   expiresAt?: Date;
 }

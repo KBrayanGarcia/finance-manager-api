@@ -63,7 +63,7 @@ export class Transaction extends BaseEntity {
   })
   readonly amount: number;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   readonly transactionDate: Date;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
