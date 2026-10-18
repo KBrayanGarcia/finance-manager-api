@@ -11,9 +11,9 @@ export abstract class BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   readonly id: string;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamptz' })
   readonly createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamptz' })
   readonly updatedAt: Date;
 }
