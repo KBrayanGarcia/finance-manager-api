@@ -2,13 +2,13 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { EntityManager, Repository } from "typeorm";
+import * as bcrypt from "bcrypt";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { User } from "./entities/user.entity";
 
 @Injectable()
 export class UsersService {
@@ -17,16 +17,17 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async createUser(dto: CreateUserDto): Promise<User> {
+  async createUser(dto: CreateUserDto, manager?: EntityManager): Promise<User> {
     const existingUser = await this.findByEmail(dto.email);
     if (existingUser) {
-      throw new ConflictException('El correo ya se encuentra registrado');
+      throw new ConflictException("El correo ya se encuentra registrado");
     }
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(dto.password, salt);
 
-    const user = this.userRepository.create({
+    const repo = manager ? manager.getRepository(User) : this.userRepository;
+    const user = repo.create({
       email: dto.email.toLowerCase().trim(),
       passwordHash,
       firstName: dto.firstName.trim(),
@@ -34,7 +35,7 @@ export class UsersService {
       isActive: true,
     });
 
-    return this.userRepository.save(user);
+    return repo.save(user);
   }
 
   async findById(id: string): Promise<User> {
@@ -48,7 +49,14 @@ export class UsersService {
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { email: email.toLowerCase().trim() },
-      select: ['id', 'email', 'passwordHash', 'firstName', 'lastName', 'isActive'],
+      select: [
+        "id",
+        "email",
+        "passwordHash",
+        "firstName",
+        "lastName",
+        "isActive",
+      ],
     });
   }
 
@@ -63,7 +71,8 @@ export class UsersService {
 
     const updated = this.userRepository.merge(user, {
       firstName: dto.firstName?.trim() ?? user.firstName,
-      lastName: dto.lastName !== undefined ? dto.lastName.trim() : user.lastName,
+      lastName:
+        dto.lastName !== undefined ? dto.lastName.trim() : user.lastName,
       passwordHash,
     });
 

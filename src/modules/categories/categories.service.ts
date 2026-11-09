@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
-import { CategoryType } from '../../common/enums/category-type.enum';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
-import { Category } from './entities/category.entity';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { EntityManager, Repository } from "typeorm";
+import { CategoryType } from "../../common/enums/category-type.enum";
+import { DEFAULT_CATEGORIES } from "./constants/default-categories.constant";
+import { CreateCategoryDto } from "./dto/create-category.dto";
+import { UpdateCategoryDto } from "./dto/update-category.dto";
+import { Category } from "./entities/category.entity";
 
 @Injectable()
 export class CategoriesService {
@@ -12,6 +13,39 @@ export class CategoriesService {
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
   ) {}
+
+  async seedDefaultCategories(
+    userId: string,
+    manager?: EntityManager,
+  ): Promise<Category[]> {
+    const repo = manager
+      ? manager.getRepository(Category)
+      : this.categoryRepository;
+
+    const existingCount = await repo.count({
+      where: { userId },
+    });
+
+    if (existingCount > 0) {
+      return repo.find({
+        where: { userId, isActive: true },
+        order: { name: "ASC" },
+      });
+    }
+
+    const categoriesToCreate = DEFAULT_CATEGORIES.map((def) =>
+      repo.create({
+        userId,
+        name: def.name,
+        type: def.type,
+        icon: def.icon,
+        color: def.color,
+        isActive: true,
+      }),
+    );
+
+    return repo.save(categoriesToCreate);
+  }
 
   async createCategory(params: {
     readonly userId: string;
@@ -33,19 +67,24 @@ export class CategoriesService {
     readonly userId: string;
     readonly type?: CategoryType;
   }): Promise<Category[]> {
-    const query = this.categoryRepository
-      .createQueryBuilder('category')
-      .where('category.isActive = :isActive', { isActive: true })
-      .andWhere(
-        '(category.userId = :userId OR category.userId IS NULL)',
-        { userId: params.userId },
-      );
+    const totalCount = await this.categoryRepository.count({
+      where: { userId: params.userId },
+    });
 
-    if (params.type) {
-      query.andWhere('category.type = :type', { type: params.type });
+    if (totalCount === 0) {
+      await this.seedDefaultCategories(params.userId);
     }
 
-    return query.orderBy('category.name', 'ASC').getMany();
+    const query = this.categoryRepository
+      .createQueryBuilder("category")
+      .where("category.isActive = :isActive", { isActive: true })
+      .andWhere("category.userId = :userId", { userId: params.userId });
+
+    if (params.type) {
+      query.andWhere("category.type = :type", { type: params.type });
+    }
+
+    return query.orderBy("category.name", "ASC").getMany();
   }
 
   async findById(params: {
@@ -53,14 +92,13 @@ export class CategoriesService {
     readonly userId: string;
   }): Promise<Category> {
     const category = await this.categoryRepository.findOne({
-      where: [
-        { id: params.id, userId: params.userId },
-        { id: params.id, userId: IsNull() },
-      ],
+      where: { id: params.id, userId: params.userId },
     });
 
     if (!category) {
-      throw new NotFoundException(`Categoría con ID ${params.id} no encontrada`);
+      throw new NotFoundException(
+        `Categoría con ID ${params.id} no encontrada`,
+      );
     }
 
     return category;
